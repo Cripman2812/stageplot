@@ -63,3 +63,8 @@ See `GITHUB_PAGES.md` (base is `./` for relative assets).
 ## License
 
 Source provided for the StageForge project build.
+
+## Engineering additions
+The current build includes a Planning workspace, XLSX export, IndexedDB persistence, DMX conflict validation, circuit planning, numeric 3D object inspection, and stronger GitHub Pages/PWA assets.
+
+For native builds, install dependencies on a developer machine, then run `npm install`, `npm run build`, `npx cap add android`, `npx cap add ios`, and `npx cap sync`. iOS compilation/signing requires macOS + Xcode + an Apple Developer account.
