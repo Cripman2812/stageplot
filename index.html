@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StageForge Pro</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>StageForge Pro</h1>
+</header>
+
+<main>
+<div id="canvas-container"></div>
+
+<div class="panel">
+<h3>Stage Setup</h3>
+
+<label>Speaker</label>
+<input type="number" id="speakers" value="4">
+
+<label>Monitor</label>
+<input type="number" id="monitors" value="4">
+
+<label>Mic</label>
+<input type="number" id="mics" value="8">
+
+<button onclick="generate()">Generate</button>
+
+<h3>Rider</h3>
+<textarea id="rider" placeholder="Rider detaylarını gir..."></textarea>
+
+<button onclick="exportPDF()">PDF Export</button>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
