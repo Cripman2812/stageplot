@@ -135,7 +135,7 @@ export function RiderGenerator() {
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Inputs ({project.inputs.length})</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: '1rem' }}>Input / Mic List ({project.inputs.length})</h3>
         {project.inputs.length === 0 ? (
           <p style={{ color: 'var(--text-muted)' }}>None defined.</p>
         ) : (
@@ -145,18 +145,23 @@ export function RiderGenerator() {
                 <th>Ch</th>
                 <th>Name</th>
                 <th>Source</th>
+                <th>Mic / DI</th>
                 <th>48V</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
               {project.inputs
+                .slice()
                 .sort((a, b) => a.number - b.number)
                 .map(i => (
                   <tr key={i.id}>
                     <td>{i.number}</td>
                     <td>{i.name}</td>
                     <td>{i.source}</td>
+                    <td>{i.micType || ''}</td>
                     <td>{i.phantom ? 'Y' : ''}</td>
+                    <td>{i.notes || ''}</td>
                   </tr>
                 ))}
             </tbody>

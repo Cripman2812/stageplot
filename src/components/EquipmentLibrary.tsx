@@ -16,6 +16,8 @@ const CATEGORIES: { id: EquipmentCategory | 'all'; label: string }[] = [
   { id: 'instrument', label: 'Instruments' },
   { id: 'foh', label: 'FOH' },
   { id: 'power', label: 'Power' },
+  { id: 'cable', label: 'Cables' },
+  { id: 'other', label: 'Other' },
 ];
 
 export function EquipmentLibrary({ onClose }: { onClose?: () => void }) {

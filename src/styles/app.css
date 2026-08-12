@@ -404,9 +404,115 @@ label {
   outline-offset: 2px;
 }
 
-/* Print for rider */
-@media print {
-  .bottom-nav, .top-bar, .toolbar { display: none !important; }
-  .app-shell { height: auto; overflow: visible; }
-  .main-content { overflow: visible; }
+/* Hidden on screen, visible only when printing */
+.print-only {
+  display: none;
 }
+
+/* ========== PRINT / PDF ========== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: #111 !important;
+  }
+
+  .bottom-nav,
+  .top-bar,
+  .toolbar,
+  .icon-btn,
+  .btn,
+  .sheet-header button,
+  [style*="position: sticky"] {
+    display: none !important;
+  }
+
+  .app-shell {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .main-content {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    color: #111 !important;
+    margin: 6px 0 !important;
+    padding: 8px !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide interactive edit cards in I/O when printing */
+  #io-lists-content > .card {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+    color: #111 !important;
+  }
+
+  th, td {
+    border: 1px solid #999 !important;
+    padding: 3px 5px !important;
+    text-align: left !important;
+    color: #111 !important;
+  }
+
+  th {
+    background: #eee !important;
+    font-weight: 600 !important;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  h3, strong {
+    color: #111 !important;
+  }
+
+  .warning-box {
+    border: 1px solid #c90 !important;
+    background: #fff8e6 !important;
+    color: #663 !important;
+    break-inside: avoid;
+  }
+
+  #rider-content {
+    color: #111 !important;
+  }
+
+  #rider-content .card {
+    break-inside: avoid;
+  }
+
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+}
+

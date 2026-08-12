@@ -60,12 +60,104 @@ export function IOLists() {
       </div>
 
       <div id="io-lists-content" style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+        {/* Compact print-only tables so multi-channel lists span pages correctly */}
+        <div className="print-only">
+          {tab === 'inputs' && (
+            <>
+              <h2 style={{ margin: '0 0 8px' }}>Input List — {project.meta.name || 'StageForge'}</h2>
+              <p style={{ margin: '0 0 12px', fontSize: '0.85rem' }}>
+                {project.meta.venue && <>Venue: {project.meta.venue} · </>}
+                {project.meta.date && <>Date: {project.meta.date} · </>}
+                Channels: {project.inputs.length}
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ width: 40 }}>Ch</th>
+                    <th>Name</th>
+                    <th>Source / Mic</th>
+                    <th style={{ width: 50 }}>48V</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {project.inputs
+                    .slice()
+                    .sort((a, b) => a.number - b.number)
+                    .map(ch => (
+                      <tr key={ch.id}>
+                        <td>{ch.number}</td>
+                        <td>{ch.name}</td>
+                        <td>{[ch.source, ch.micType].filter(Boolean).join(' / ')}</td>
+                        <td>{ch.phantom ? 'Y' : ''}</td>
+                        <td>{ch.notes || ''}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </>
+          )}
+          {tab === 'outputs' && (
+            <>
+              <h2 style={{ margin: '0 0 8px' }}>Output List — {project.meta.name || 'StageForge'}</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ width: 40 }}>Ch</th>
+                    <th>Name</th>
+                    <th>Destination</th>
+                    <th>Type</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {project.outputs
+                    .slice()
+                    .sort((a, b) => a.number - b.number)
+                    .map(ch => (
+                      <tr key={ch.id}>
+                        <td>{ch.number}</td>
+                        <td>{ch.name}</td>
+                        <td>{ch.destination}</td>
+                        <td>{ch.type}</td>
+                        <td>{ch.notes || ''}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </>
+          )}
+          {tab === 'monitors' && (
+            <>
+              <h2 style={{ margin: '0 0 8px' }}>Monitor Mixes — {project.meta.name || 'StageForge'}</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {project.monitors.map(m => (
+                    <tr key={m.id}>
+                      <td>{m.name}</td>
+                      <td>{m.type}</td>
+                      <td>{m.notes || ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </div>
+
         {tab === 'inputs' && (
           <>
             {project.inputs
               .sort((a, b) => a.number - b.number)
               .map(ch => (
-                <div key={ch.id} className="card" style={{ margin: 8 }}>
+                <div key={ch.id} className="card no-print" style={{ margin: 8 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                     <input
                       style={{ width: 56 }}
