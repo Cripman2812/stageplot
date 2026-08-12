@@ -1,13 +1,5 @@
 name: iOS Build
 
-# Builds the iOS app on Apple's macOS runners (required -- iOS can only be
-# built on macOS, Apple does not allow it elsewhere).
-#
-# NOTE: Without an Apple Developer account + signing certificate, this
-# workflow produces an UNSIGNED simulator build only (a .app you can run in
-# the iOS Simulator, not install on a real iPhone). To get a real .ipa for
-# TestFlight / App Store / a physical device, you must add signing secrets
-# -- see the commented-out "Real device / App Store build" section below.
 on:
   push:
     branches: [ main ]
@@ -35,7 +27,8 @@ jobs:
       - name: Ensure native iOS project exists
         run: |
           if [ ! -d "ios/App" ]; then
-            echo "No native iOS project found yet -- creating it."
+            echo "No real native iOS project found yet -- creating it."
+            rm -rf ios
             npx cap add ios
           else
             echo "Native iOS project already present."
@@ -65,17 +58,3 @@ jobs:
           name: stageforge-ios-simulator-app
           path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
           if-no-files-found: error
-
-      # ------------------------------------------------------------------
-      # Real device / App Store build (produces a signed .ipa)
-      # ------------------------------------------------------------------
-      # Requires an active Apple Developer Program membership ($99/yr).
-      # 1. In Xcode (or via App Store Connect), create a signing certificate
-      #    and provisioning profile for appId `com.stageforge.app`.
-      # 2. Export the certificate as a .p12 and base64-encode it, then add
-      #    these repo secrets: BUILD_CERTIFICATE_BASE64, P12_PASSWORD,
-      #    BUILD_PROVISION_PROFILE_BASE64, KEYCHAIN_PASSWORD.
-      # 3. Replace the simulator build step above with `xcodebuild archive`
-      #    followed by `xcodebuild -exportArchive` using an ExportOptions.plist.
-      # Anthropic/Apple docs + Capacitor's iOS deployment guide walk through
-      # this exact secret setup if you want to add it.
