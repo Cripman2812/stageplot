@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="StageForge">
+  <rect width="512" height="512" rx="96" fill="#0b0f14"/>
+  <rect x="64" y="320" width="384" height="96" rx="12" fill="#1a222d" stroke="#3b82f6" stroke-width="12"/>
+  <rect x="112" y="200" width="72" height="100" rx="8" fill="#3b82f6"/>
+  <rect x="220" y="160" width="72" height="140" rx="8" fill="#10b981"/>
+  <rect x="328" y="220" width="72" height="80" rx="8" fill="#f59e0b"/>
+  <circle cx="256" cy="96" r="28" fill="#e8eef5"/>
+</svg>
