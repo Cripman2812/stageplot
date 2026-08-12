@@ -1,0 +1,81 @@
+name: iOS Build
+
+# Builds the iOS app on Apple's macOS runners (required -- iOS can only be
+# built on macOS, Apple does not allow it elsewhere).
+#
+# NOTE: Without an Apple Developer account + signing certificate, this
+# workflow produces an UNSIGNED simulator build only (a .app you can run in
+# the iOS Simulator, not install on a real iPhone). To get a real .ipa for
+# TestFlight / App Store / a physical device, you must add signing secrets
+# -- see the commented-out "Real device / App Store build" section below.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-ios-simulator:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install web dependencies
+        run: npm install
+
+      - name: Build web app (vite)
+        run: npm run build
+
+      - name: Ensure native iOS project exists
+        run: |
+          if [ ! -d "ios/App" ]; then
+            echo "No native iOS project found yet -- creating it."
+            npx cap add ios
+          else
+            echo "Native iOS project already present."
+          fi
+
+      - name: Sync web build into native project
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install
+
+      - name: Build for iOS Simulator (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stageforge-ios-simulator-app
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          if-no-files-found: error
+
+      # ------------------------------------------------------------------
+      # Real device / App Store build (produces a signed .ipa)
+      # ------------------------------------------------------------------
+      # Requires an active Apple Developer Program membership ($99/yr).
+      # 1. In Xcode (or via App Store Connect), create a signing certificate
+      #    and provisioning profile for appId `com.stageforge.app`.
+      # 2. Export the certificate as a .p12 and base64-encode it, then add
+      #    these repo secrets: BUILD_CERTIFICATE_BASE64, P12_PASSWORD,
+      #    BUILD_PROVISION_PROFILE_BASE64, KEYCHAIN_PASSWORD.
+      # 3. Replace the simulator build step above with `xcodebuild archive`
+      #    followed by `xcodebuild -exportArchive` using an ExportOptions.plist.
+      # Anthropic/Apple docs + Capacitor's iOS deployment guide walk through
+      # this exact secret setup if you want to add it.
