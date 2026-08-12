@@ -1,12 +1,9 @@
-const CACHE = 'stageforge-v3';
+const CACHE = 'stageforge-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.svg',
-  './icon-192.png',
-  './assets/app.js',
-  './assets/app.css'
+  './icon.svg'
 ];
 
 self.addEventListener('install', (e) => {
