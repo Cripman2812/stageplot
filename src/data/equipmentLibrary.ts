@@ -5,6 +5,7 @@ export const EQUIPMENT_LIBRARY: EquipmentTemplate[] = [
   { id: 'sp-line-array', category: 'speaker', name: 'Line Array Element', defaultWidth: 1.0, defaultHeight: 0.4, defaultDepth: 0.5, color: '#3b82f6', powerWatts: 800, weightKg: 35, description: 'Active line array box' },
   { id: 'sp-line-array-empty', category: 'speaker', name: 'Empty Line Array Frame', defaultWidth: 1.1, defaultHeight: 0.35, defaultDepth: 0.55, color: '#64748b', weightKg: 12, description: 'Empty flying frame / bumper for line array' },
   { id: 'sp-line-array-hang', category: 'speaker', name: 'Line Array Hang (4x)', defaultWidth: 1.1, defaultHeight: 1.8, defaultDepth: 0.55, color: '#2563eb', powerWatts: 3200, weightKg: 150, description: 'Typical 4-box line array hang' },
+  { id: 'sp-line-array-hang-8', category: 'speaker', name: 'Line Array Hang (8x)', defaultWidth: 1.1, defaultHeight: 3.4, defaultDepth: 0.55, color: '#1d4ed8', powerWatts: 6400, weightKg: 300, description: 'Full-size 8-box festival main hang' },
   { id: 'sp-point-source', category: 'speaker', name: 'Point Source 15"', defaultWidth: 0.5, defaultHeight: 0.7, defaultDepth: 0.45, color: '#2563eb', powerWatts: 600, weightKg: 28 },
   { id: 'sp-full-range', category: 'speaker', name: 'Full Range 12"', defaultWidth: 0.4, defaultHeight: 0.55, defaultDepth: 0.35, color: '#1d4ed8', powerWatts: 400, weightKg: 18 },
   { id: 'sp-front-fill', category: 'speaker', name: 'Front Fill', defaultWidth: 0.35, defaultHeight: 0.25, defaultDepth: 0.3, color: '#1e40af', powerWatts: 250, weightKg: 10 },

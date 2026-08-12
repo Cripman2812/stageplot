@@ -5,7 +5,7 @@ import {
   calculateTotalWeight,
   estimateRoughSPL,
 } from '../utils/calculations';
-import { exportAsPdf, exportElementAsJpeg } from '../utils/export';
+import { exportElementAsPdf, exportElementAsJpeg } from '../utils/export';
 
 export function RiderGenerator() {
   const { project, validationIssues } = useProject();
@@ -30,7 +30,16 @@ export function RiderGenerator() {
     try {
       await exportElementAsJpeg(contentRef.current, `${baseName}_rider.jpg`);
     } catch {
-      alert('JPEG export failed in this browser. Use PDF / Print instead.');
+      alert('JPEG export failed in this browser. Use PDF instead.');
+    }
+  };
+
+  const onPdf = async () => {
+    if (!contentRef.current) return;
+    try {
+      await exportElementAsPdf(contentRef.current, `${baseName}_rider.pdf`);
+    } catch {
+      alert('PDF export failed. Try JPEG instead.');
     }
   };
 
@@ -39,8 +48,8 @@ export function RiderGenerator() {
       <div className="sheet-header">
         <strong>Technical Rider</strong>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn btn-ghost" onClick={exportAsPdf} style={{ minHeight: 36, padding: '6px 12px' }}>
-            PDF / Print
+          <button className="btn btn-ghost" onClick={onPdf} style={{ minHeight: 36, padding: '6px 12px' }}>
+            PDF
           </button>
           <button className="btn btn-primary" onClick={onJpeg} style={{ minHeight: 36, padding: '6px 12px' }}>
             JPEG

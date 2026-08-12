@@ -14,7 +14,8 @@
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/core": "^7.4.3",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
 import { useProject } from '../store/ProjectContext';
+import { exportCanvasAsJpeg, exportCanvasAsPdf } from '../utils/export';
 
-declare global {
-  interface Window {
-    THREE: any;
-  }
-}
+// Three.js is bundled (npm dependency) rather than pulled from a CDN at
+// runtime. This is a deliberate size-vs-reliability tradeoff: the Capacitor
+// APK build has no network guarantee, so a runtime CDN <script> tag left the
+// entire 3D view (and anything relying on it) broken offline / on first
+// launch before the OS webview had cached it. Bundling adds ~600KB to the
+// build, which is fine per the project's own size constraints.
 
 /** Professional procedural meshes – recognizable silhouettes (MA / EaseFocus / SketchUp style, mobile-safe) */
 function createObjectMesh(
@@ -43,15 +46,41 @@ function createObjectMesh(
       add(new THREE.BoxGeometry(t, h, d), frameMat, -w / 2 + t / 2, 0, 0);
       add(new THREE.BoxGeometry(t, h, d), frameMat, w / 2 - t / 2, 0, 0);
     } else if (name.includes('hang') || h > 1.0) {
-      // Stacked line array hang (4 boxes)
-      const boxH = h / 4.2;
+      // Stacked line array hang (4 boxes) with a slight progressive splay –
+      // this is the recognizable curved "banana" rig shape seen in
+      // EASE Focus / rigging-plot renders, rather than a flat stack.
+      const boxCount = name.includes('8x') || name.includes('(8') ? 8 : name.includes('3x') ? 3 : 4;
+      const boxH = h / (boxCount + 0.2);
       const boxMat = mat(baseColor, 0.45, 0.25);
       const grilleMat = mat(0x111827, 0.8, 0.1);
-      for (let i = 0; i < 4; i++) {
-        const y = -h / 2 + boxH / 2 + i * (boxH + 0.02);
-        add(new THREE.BoxGeometry(w * 0.95, boxH, d * 0.9), boxMat, 0, y, 0);
-        add(new THREE.BoxGeometry(w * 0.7, boxH * 0.7, 0.02), grilleMat, 0, y, d * 0.45);
+      const handleMat = mat(0x1e293b, 0.5, 0.4);
+      let cursorY = h / 2;
+      let cursorZ = 0;
+      let splay = 0;
+      for (let i = 0; i < boxCount; i++) {
+        const boxSplay = 0.035 + i * 0.012; // wider splay lower in the hang
+        const boxD = d * 0.9;
+        const y = cursorY - boxH / 2;
+        add(new THREE.BoxGeometry(w * 0.95, boxH * 0.98, boxD), boxMat, 0, y, cursorZ, splay, 0, 0);
+        add(
+          new THREE.BoxGeometry(w * 0.7, boxH * 0.7, 0.02),
+          grilleMat,
+          0,
+          y,
+          cursorZ + Math.cos(splay) * boxD * 0.45,
+          splay,
+          0,
+          0
+        );
+        // rigging link plates between boxes
+        add(new THREE.BoxGeometry(0.05, 0.03, 0.05), handleMat, -w * 0.42, cursorY, cursorZ);
+        add(new THREE.BoxGeometry(0.05, 0.03, 0.05), handleMat, w * 0.42, cursorY, cursorZ);
+        splay += boxSplay;
+        cursorY -= boxH * Math.cos(splay);
+        cursorZ -= boxH * Math.sin(splay);
       }
+      // flying frame/bumper on top
+      add(new THREE.BoxGeometry(w * 1.05, 0.05, d * 0.6), handleMat, 0, h / 2 + 0.03, 0);
     } else {
       // Single line array element or point source
       const bodyMat = mat(baseColor, 0.4, 0.3);
@@ -80,8 +109,24 @@ function createObjectMesh(
     return group;
   }
 
-  // ---------- WEDGE / MONITOR ----------
+  // ---------- WEDGE / MONITOR / IEM ----------
   if (obj.type === 'monitor') {
+    if (name.includes('iem') || name.includes('transmitter') || name.includes('rack')) {
+      // IEM transmitter rack – flat 19" rack unit, not a wedge
+      const rackMat = mat(0x1f2937, 0.5, 0.4);
+      const faceMat = mat(baseColor, 0.4, 0.3);
+      add(new THREE.BoxGeometry(w, h, d), rackMat);
+      add(new THREE.BoxGeometry(w * 0.97, h * 0.7, 0.015), faceMat, 0, 0, d / 2 + 0.008);
+      // channel LED strip + antenna suggestion
+      const chCount = Math.min(8, Math.max(2, obj.type ? 8 : 4));
+      for (let i = 0; i < chCount; i++) {
+        const x = -w * 0.42 + (i / (chCount - 1)) * w * 0.84;
+        add(new THREE.BoxGeometry(0.015, 0.015, 0.005), mat(0x22d3ee, 0.2, 0.1), x, h * 0.15, d / 2 + 0.02);
+      }
+      add(new THREE.CylinderGeometry(0.006, 0.006, h * 1.6, 6), mat(0x94a3b8, 0.3, 0.7), -w * 0.35, h * 0.6, d / 2 - 0.02);
+      add(new THREE.CylinderGeometry(0.006, 0.006, h * 1.6, 6), mat(0x94a3b8, 0.3, 0.7), w * 0.35, h * 0.6, d / 2 - 0.02);
+      return group;
+    }
     const bodyMat = mat(baseColor, 0.5, 0.2);
     // Angled wedge silhouette
     add(new THREE.BoxGeometry(w, h * 0.7, d), bodyMat, 0, -h * 0.1, 0);
@@ -93,22 +138,56 @@ function createObjectMesh(
     grille.position.set(0, h * 0.05, d * 0.35);
     grille.rotation.x = -0.45;
     group.add(grille);
+    // driver cone suggestion
+    add(new THREE.CylinderGeometry(w * 0.18, w * 0.18, 0.02, 14), mat(0x374151, 0.6, 0.2), 0, h * 0.02, d * 0.36, Math.PI / 2, 0, 0);
     return group;
   }
 
   // ---------- CONSOLE (audio + lighting) ----------
   if (obj.type === 'console') {
+    const isLighting = name.includes('ma') || name.includes('avolites') || name.includes('etc') ||
+      name.includes('eos') || name.includes('hedgehog') || name.includes('elation') || name.includes('light');
     const bodyMat = mat(baseColor, 0.35, 0.45);
     const darkMat = mat(0x1a1a1a, 0.6, 0.3);
     const bodyH = Math.min(h, 0.22);
     add(new THREE.BoxGeometry(w, bodyH, d), bodyMat, 0, -h / 2 + bodyH / 2, 0);
-    // Meter bridge / screen
+    // Meter bridge / screen(s)
     add(new THREE.BoxGeometry(w * 0.9, h * 0.35, d * 0.12), darkMat, 0, bodyH * 0.6, -d * 0.35);
-    // Fader bank suggestion (raised strip)
-    add(new THREE.BoxGeometry(w * 0.85, 0.03, d * 0.55), mat(0x222222, 0.5, 0.2), 0, bodyH * 0.55, d * 0.05);
+    add(new THREE.BoxGeometry(w * 0.86, h * 0.3, 0.01), mat(0x0ea5e9, 0.2, 0.1), 0, bodyH * 0.6, -d * 0.28);
     // Side panels
     add(new THREE.BoxGeometry(0.04, bodyH * 1.1, d), darkMat, -w / 2 + 0.02, -h / 2 + bodyH / 2, 0);
     add(new THREE.BoxGeometry(0.04, bodyH * 1.1, d), darkMat, w / 2 - 0.02, -h / 2 + bodyH / 2, 0);
+
+    if (isLighting) {
+      // Lighting console: rows of round encoder knobs + playback fader wing
+      add(new THREE.BoxGeometry(w * 0.85, 0.03, d * 0.5), mat(0x222222, 0.5, 0.2), 0, bodyH * 0.55, d * 0.05);
+      const cols = 10;
+      for (let r = 0; r < 2; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = -w * 0.4 + (c / (cols - 1)) * w * 0.8;
+          add(
+            new THREE.CylinderGeometry(0.012, 0.012, 0.015, 10),
+            mat(0x64748b, 0.4, 0.5),
+            x,
+            bodyH * 0.57,
+            d * 0.02 + r * d * 0.14
+          );
+        }
+      }
+      // playback fader strip at front edge
+      for (let c = 0; c < 6; c++) {
+        const x = -w * 0.35 + (c / 5) * w * 0.7;
+        add(new THREE.BoxGeometry(0.02, 0.02, d * 0.15), mat(0xf59e0b, 0.3, 0.2), x, bodyH * 0.57, d * 0.38);
+      }
+    } else {
+      // Audio console: bank of long linear fader caps
+      const faders = 16;
+      for (let i = 0; i < faders; i++) {
+        const x = -w * 0.42 + (i / (faders - 1)) * w * 0.84;
+        add(new THREE.BoxGeometry(0.015, 0.02, d * 0.35), mat(0x0f172a, 0.4, 0.3), x, bodyH * 0.56, d * 0.1);
+        add(new THREE.BoxGeometry(0.02, 0.03, 0.05), mat(0xe2e8f0, 0.3, 0.2), x, bodyH * 0.58, d * 0.05);
+      }
+    }
     return group;
   }
 
@@ -240,25 +319,13 @@ export function Stage3D() {
     target: { x: 0, y: 0, z: 0 },
   });
 
-  // Load Three.js from CDN if not present
+  // THREE is now a static import, always available — just mark ready on mount.
   useEffect(() => {
-    if (window.THREE) {
-      setReady(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    script.async = true;
-    script.onload = () => setReady(true);
-    document.head.appendChild(script);
-    return () => {
-      // keep script for session
-    };
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (!ready || !containerRef.current || !window.THREE) return;
-    const THREE = window.THREE;
+    if (!ready || !containerRef.current) return;
     const container = containerRef.current;
     const w = container.clientWidth;
     const h = container.clientHeight;
@@ -270,7 +337,10 @@ export function Stage3D() {
     const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    // preserveDrawingBuffer is required so the canvas can be captured for
+    // JPEG/PDF snapshot export — without it the WebGL buffer is cleared
+    // right after each frame and toDataURL() silently returns a blank image.
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.innerHTML = '';
@@ -358,8 +428,7 @@ export function Stage3D() {
 
   // Sync objects
   useEffect(() => {
-    if (!ready || !sceneRef.current || !window.THREE) return;
-    const THREE = window.THREE;
+    if (!ready || !sceneRef.current) return;
     const scene = sceneRef.current;
     const existing = meshesRef.current;
 
@@ -414,8 +483,7 @@ export function Stage3D() {
   const pickObject = (clientX: number, clientY: number) => {
     const el = containerRef.current;
     const cam = cameraRef.current;
-    const THREE = window.THREE;
-    if (!el || !cam || !THREE) return null;
+    if (!el || !cam) return null;
     const rect = el.getBoundingClientRect();
     const mouse = new THREE.Vector2(
       ((clientX - rect.left) / rect.width) * 2 - 1,
@@ -519,8 +587,7 @@ export function Stage3D() {
   // simple selection via raycast on click (single pointer)
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || !ready || !window.THREE) return;
-    const THREE = window.THREE;
+    if (!el || !ready) return;
 
     const onClick = (e: PointerEvent) => {
       if (!cameraRef.current || !sceneRef.current || !rendererRef.current) return;
@@ -555,6 +622,32 @@ export function Stage3D() {
           }}
         >
           Reset View
+        </button>
+        <button
+          onClick={() => {
+            const renderer = rendererRef.current;
+            const scene = sceneRef.current;
+            const camera = cameraRef.current;
+            if (!renderer || !scene || !camera) return;
+            renderer.render(scene, camera); // force a fresh frame into the buffer before capture
+            exportCanvasAsJpeg(renderer.domElement as HTMLCanvasElement, 'stage_3d.jpg');
+          }}
+          title="Export 3D view as JPEG"
+        >
+          JPEG
+        </button>
+        <button
+          onClick={() => {
+            const renderer = rendererRef.current;
+            const scene = sceneRef.current;
+            const camera = cameraRef.current;
+            if (!renderer || !scene || !camera) return;
+            renderer.render(scene, camera);
+            exportCanvasAsPdf(renderer.domElement as HTMLCanvasElement, 'stage_3d.pdf');
+          }}
+          title="Export 3D view as PDF"
+        >
+          PDF
         </button>
       </div>
       <div ref={containerRef} className="three-container" style={{ flex: 1, touchAction: 'none' }} />

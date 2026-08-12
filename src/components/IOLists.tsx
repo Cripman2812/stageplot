@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useProject } from '../store/ProjectContext';
 import type { InputChannel, OutputChannel, MonitorMix } from '../types';
-import { exportAsPdf, exportElementAsJpeg } from '../utils/export';
+import { exportElementAsPdf, exportElementAsJpeg } from '../utils/export';
 
 export function IOLists() {
   const { project, dispatch } = useProject();
@@ -386,8 +386,19 @@ export function IOLists() {
             ＋ Monitor Mix
           </button>
         )}
-        <button className="btn btn-ghost" onClick={exportAsPdf}>
-          PDF / Print
+        <button
+          className="btn btn-ghost"
+          onClick={async () => {
+            const el = document.getElementById('io-lists-content');
+            if (!el) return;
+            try {
+              await exportElementAsPdf(el as HTMLElement, `${tab}_list.pdf`);
+            } catch {
+              alert('PDF export failed. Try JPEG.');
+            }
+          }}
+        >
+          PDF
         </button>
         <button
           className="btn btn-ghost"
@@ -397,7 +408,7 @@ export function IOLists() {
             try {
               await exportElementAsJpeg(el as HTMLElement, `${tab}_list.jpg`);
             } catch {
-              alert('JPEG export failed. Use PDF / Print.');
+              alert('JPEG export failed. Try PDF.');
             }
           }}
         >
