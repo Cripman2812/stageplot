@@ -37,7 +37,8 @@ jobs:
         run: |
           if [ ! -f "android/app/build.gradle" ]; then
             echo "No real native Android project found yet -- creating it."
-            rm -rf android
+          rm -rf android
+            npm install @capacitor/android
             npx cap add android
           else
             echo "Native Android project already present."
