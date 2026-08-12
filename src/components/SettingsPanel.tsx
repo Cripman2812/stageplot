@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useProject } from '../store/ProjectContext';
 import { TEMPLATES } from '../data/equipmentLibrary';
-import { exportProjectJSON, importProjectJSON } from '../utils/storage';
+import { importProjectJSON } from '../utils/storage';
 import { createEmptyProject } from '../data/equipmentLibrary';
 
 export function SettingsPanel() {
@@ -186,11 +186,8 @@ export function SettingsPanel() {
           <button className="btn btn-primary" onClick={save}>
             Save Now
           </button>
-          <button className="btn btn-ghost" onClick={() => exportProjectJSON(project)}>
-            Export JSON
-          </button>
           <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
-            Import JSON
+            Import Project
           </button>
           <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={handleImport} />
           <button

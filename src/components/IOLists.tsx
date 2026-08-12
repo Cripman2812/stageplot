@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useProject } from '../store/ProjectContext';
 import type { InputChannel, OutputChannel, MonitorMix } from '../types';
-import { generateInputListCSV, generateOutputListCSV, generateMonitorListCSV, downloadBlob } from '../utils/calculations';
+import { exportAsPdf, exportElementAsJpeg } from '../utils/export';
 
 export function IOLists() {
   const { project, dispatch } = useProject();
@@ -59,7 +59,7 @@ export function IOLists() {
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+      <div id="io-lists-content" style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
         {tab === 'inputs' && (
           <>
             {project.inputs
@@ -280,62 +280,37 @@ export function IOLists() {
         }}
       >
         {tab === 'inputs' && (
-          <>
-            <button className="btn btn-primary" onClick={addInput}>
-              ＋ Input
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() =>
-                downloadBlob(
-                  generateInputListCSV(project),
-                  'input_list.csv',
-                  'text/csv'
-                )
-              }
-            >
-              Export CSV
-            </button>
-          </>
+          <button className="btn btn-primary" onClick={addInput}>
+            ＋ Input
+          </button>
         )}
         {tab === 'outputs' && (
-          <>
-            <button className="btn btn-primary" onClick={addOutput}>
-              ＋ Output
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() =>
-                downloadBlob(
-                  generateOutputListCSV(project),
-                  'output_list.csv',
-                  'text/csv'
-                )
-              }
-            >
-              Export CSV
-            </button>
-          </>
+          <button className="btn btn-primary" onClick={addOutput}>
+            ＋ Output
+          </button>
         )}
         {tab === 'monitors' && (
-          <>
-            <button className="btn btn-primary" onClick={addMonitor}>
-              ＋ Monitor Mix
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() =>
-                downloadBlob(
-                  generateMonitorListCSV(project),
-                  'monitor_list.csv',
-                  'text/csv'
-                )
-              }
-            >
-              Export CSV
-            </button>
-          </>
+          <button className="btn btn-primary" onClick={addMonitor}>
+            ＋ Monitor Mix
+          </button>
         )}
+        <button className="btn btn-ghost" onClick={exportAsPdf}>
+          PDF / Print
+        </button>
+        <button
+          className="btn btn-ghost"
+          onClick={async () => {
+            const el = document.getElementById('io-lists-content');
+            if (!el) return;
+            try {
+              await exportElementAsJpeg(el as HTMLElement, `${tab}_list.jpg`);
+            } catch {
+              alert('JPEG export failed. Use PDF / Print.');
+            }
+          }}
+        >
+          JPEG
+        </button>
       </div>
     </div>
   );

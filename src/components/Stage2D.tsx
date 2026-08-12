@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useProject } from '../store/ProjectContext';
 import type { StageObject } from '../types';
+import { exportCanvasAsJpeg } from '../utils/export';
 
 const SCALE = 40; // pixels per meter base
 
@@ -240,6 +241,15 @@ export function Stage2D() {
           style={{ color: 'var(--danger)' }}
         >
           Del
+        </button>
+        <button
+          onClick={() => {
+            const c = canvasRef.current;
+            if (c) exportCanvasAsJpeg(c, 'stage_plot.jpg');
+          }}
+          title="Export stage as JPEG"
+        >
+          JPEG
         </button>
       </div>
       <canvas

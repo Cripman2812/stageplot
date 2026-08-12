@@ -1,17 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useProject } from '../store/ProjectContext';
 import {
   calculateTotalPower,
   calculateTotalWeight,
   estimateRoughSPL,
-  generateInputListCSV,
-  downloadBlob,
 } from '../utils/calculations';
-import { exportProjectJSON } from '../utils/storage';
-import { exportProjectXLSX } from '../utils/xlsx';
+import { exportAsPdf, exportElementAsJpeg } from '../utils/export';
 
 export function RiderGenerator() {
   const { project, validationIssues } = useProject();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const power = useMemo(() => calculateTotalPower(project.objects), [project.objects]);
   const weight = useMemo(() => calculateTotalWeight(project.objects), [project.objects]);
@@ -25,58 +23,32 @@ export function RiderGenerator() {
     return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
   }, [project.objects]);
 
-  const printRider = () => {
-    window.print();
-  };
+  const baseName = (project.meta.name || 'rider').replace(/\s+/g, '_');
 
-  const exportFullCSV = () => {
-    const lines = [
-      'StageForge Technical Rider Export',
-      `Project,${project.meta.name}`,
-      `Client,${project.meta.client}`,
-      `Venue,${project.meta.venue}`,
-      `Date,${project.meta.date}`,
-      `Engineer,${project.meta.engineer}`,
-      '',
-      'Stage Dimensions (m)',
-      `Width,${project.stage.widthM}`,
-      `Depth,${project.stage.depthM}`,
-      `Height,${project.stage.heightM}`,
-      '',
-      'Equipment Summary',
-      'Name,Count',
-      ...equipmentSummary.map(e => `"${e.name}",${e.count}`),
-      '',
-      'Power Estimate (planning only)',
-      `Total Watts,${power.totalWatts}`,
-      `Est. Amps @230V,${power.estimatedAmps230V.toFixed(1)}`,
-      '',
-      'Input List',
-      generateInputListCSV(project),
-    ];
-    downloadBlob(lines.join('\n'), `${project.meta.name || 'rider'}_export.csv`, 'text/csv');
+  const onJpeg = async () => {
+    if (!contentRef.current) return;
+    try {
+      await exportElementAsJpeg(contentRef.current, `${baseName}_rider.jpg`);
+    } catch {
+      alert('JPEG export failed in this browser. Use PDF / Print instead.');
+    }
   };
 
   return (
-    <div style={{ overflowY: 'auto', height: '100%', paddingBottom: 24 }} id="rider-content">
+    <div style={{ overflowY: 'auto', height: '100%', paddingBottom: 24 }}>
       <div className="sheet-header">
         <strong>Technical Rider</strong>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn btn-ghost" onClick={printRider} style={{ minHeight: 36, padding: '6px 12px' }}>
+          <button className="btn btn-ghost" onClick={exportAsPdf} style={{ minHeight: 36, padding: '6px 12px' }}>
             PDF / Print
           </button>
-          <button className="btn btn-ghost" onClick={exportFullCSV} style={{ minHeight: 36, padding: '6px 12px' }}>CSV</button>
-          <button className="btn btn-ghost" onClick={() => exportProjectXLSX(project)} style={{ minHeight: 36, padding: '6px 12px' }}>XLSX</button>
-          <button
-            className="btn btn-primary"
-            onClick={() => exportProjectJSON(project)}
-            style={{ minHeight: 36, padding: '6px 12px' }}
-          >
-            JSON
+          <button className="btn btn-primary" onClick={onJpeg} style={{ minHeight: 36, padding: '6px 12px' }}>
+            JPEG
           </button>
         </div>
       </div>
 
+      <div id="rider-content" ref={contentRef}>
       {validationIssues.length > 0 && (
         <div className="warning-box">
           <strong>Validation notes:</strong>
@@ -200,6 +172,7 @@ export function RiderGenerator() {
       <div className="warning-box" style={{ marginTop: 16 }}>
         StageForge is a planning and documentation tool. Electrical, structural, acoustic and safety designs must be
         performed and approved by qualified professionals according to applicable regulations and standards.
+      </div>
       </div>
     </div>
   );

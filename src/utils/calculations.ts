@@ -80,41 +80,9 @@ export function validateProject(project: Project): string[] {
   return issues;
 }
 
-export function generateInputListCSV(project: Project): string {
-  const header = 'Ch,Name,Source,Mic Type,Phantom,Notes\n';
-  const rows = project.inputs
-    .sort((a, b) => a.number - b.number)
-    .map(i => `${i.number},"${i.name}","${i.source}","${i.micType || ''}",${i.phantom ? 'Yes' : 'No'},"${i.notes || ''}"`)
-    .join('\n');
-  return header + rows;
-}
 
-export function generateOutputListCSV(project: Project): string {
-  const header = 'Ch,Name,Destination,Type,Notes\n';
-  const rows = project.outputs
-    .sort((a, b) => a.number - b.number)
-    .map(o => `${o.number},"${o.name}","${o.destination}","${o.type}","${o.notes || ''}"`)
-    .join('\n');
-  return header + rows;
-}
 
-export function generateMonitorListCSV(project: Project): string {
-  const header = 'Name,Type,Channels,Notes\n';
-  const rows = project.monitors
-    .map(m => `"${m.name}","${m.type}","${m.channels.join(';')}","${m.notes || ''}"`)
-    .join('\n');
-  return header + rows;
-}
 
-export function downloadBlob(content: string, filename: string, mime: string) {
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export interface DistanceSPLInput { referenceDb: number; referenceDistanceM: number; targetDistanceM: number; sourceCount?: number; }
 export function estimateDistanceSPL(input: DistanceSPLInput): number {
