@@ -28,7 +28,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install web dependencies
-        run: npm install
+        run: npm install @capacitor/android@^7.4.3
 
       - name: Build web app (vite)
         run: npm run build
