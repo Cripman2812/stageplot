@@ -31,6 +31,10 @@ export interface StageObject {
   notes?: string;
   locked?: boolean;
   groupId?: string;
+  image2d?: string;
+  model3d?: string;
+  locked?: boolean;
+
 }
 
 export interface InputChannel {
